@@ -29,38 +29,35 @@ function App() {
   const [password, setPassword] = useState('')
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
-  const [tasks, setTasks] = useState<Task[]>([])
+  const [taskData, setTaskData] = useState<{ userId: string; tasks: Task[] } | null>(null)
   const [filter, setFilter] = useState<TaskFilter>('all')
   const [busy, setBusy] = useState(false)
-  const [loadingTasks, setLoadingTasks] = useState(true)
   const [error, setError] = useState('')
   const [authMessage, setAuthMessage] = useState('')
+  const tasks = user && taskData?.userId === user.uid ? taskData.tasks : []
 
   useEffect(() => {
     return onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser)
       setAuthReady(true)
+      setError('')
+      if (!currentUser) setTaskData(null)
     })
   }, [])
 
   useEffect(() => {
     if (!user) {
-      setTasks([])
-      setLoadingTasks(false)
       return
     }
 
-    setLoadingTasks(true)
-    setError('')
     return subscribeToTasks(
       user.uid,
       (nextTasks) => {
-        setTasks(nextTasks)
-        setLoadingTasks(false)
+        setTaskData({ userId: user.uid, tasks: nextTasks })
       },
       (reason) => {
         setError(`No se pudieron cargar las tareas: ${reason.message}`)
-        setLoadingTasks(false)
+        setTaskData({ userId: user.uid, tasks: [] })
       },
     )
   }, [user])
@@ -300,7 +297,7 @@ function App() {
               </select>
             </label>
           </div>
-          {loadingTasks ? <p className="loading">Cargando tus tareas…</p> : (
+          {taskData?.userId !== user.uid ? <p className="loading">Cargando tus tareas…</p> : (
             <TaskList tasks={tasks} filter={filter} onToggle={handleToggle} onDelete={handleDelete} onUpdate={handleUpdate} />
           )}
         </section>

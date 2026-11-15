@@ -46,7 +46,7 @@ textarea { resize: vertical; }
 .notice { padding: 12px 14px; border-radius: 10px; font-size: 13px; }
 .notice.error { border: 1px solid #f1d4d0; background: #fff3f1; color: #913c34; }
 .auth-card .notice { margin: 16px 0 0; }
-.auth-link { display: block; margin: 14px auto 0; padding: 4px; border: 0; background: transparent; color: var(--accent); font: inherit; font-size: 14px; text-decoration: underline; cursor: pointer; }
+.auth-link { display: block; margin: 14px auto 0; padding: 4px; border: 0; background: transparent; color: var(--green); font: inherit; font-size: 14px; text-decoration: underline; cursor: pointer; }
 .auth-link:disabled { cursor: wait; opacity: .65; }
 .verification-actions { display: grid; gap: 12px; margin-top: 22px; }
 .page-shell { min-height: 100vh; }
