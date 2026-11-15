@@ -45,6 +45,10 @@ export async function POST(request: Request): Promise<Response> {
     return jsonResponse({ error: 'La cuenta no tiene un correo electrónico.' }, 400)
   }
 
+  if (decodedToken.email_verified !== true) {
+    return jsonResponse({ error: 'Verifica el correo de tu cuenta antes de enviar el resumen.' }, 403)
+  }
+
   try {
     const firestore = getFirestore(getFirebaseAdminApp())
     // El filtro por UID evita incluir tareas de otras cuentas en el correo.

@@ -2,6 +2,9 @@ import { useEffect, useState, type FormEvent } from 'react'
 import {
   createUserWithEmailAndPassword,
   onAuthStateChanged,
+  reload,
+  sendEmailVerification,
+  sendPasswordResetEmail,
   signInWithEmailAndPassword,
   signOut,
   type User,
@@ -31,6 +34,7 @@ function App() {
   const [busy, setBusy] = useState(false)
   const [loadingTasks, setLoadingTasks] = useState(true)
   const [error, setError] = useState('')
+  const [authMessage, setAuthMessage] = useState('')
 
   useEffect(() => {
     return onAuthStateChanged(auth, (currentUser) => {
@@ -65,15 +69,73 @@ function App() {
     event.preventDefault()
     setBusy(true)
     setError('')
+    setAuthMessage('')
     try {
       if (authMode === 'register') {
-        await createUserWithEmailAndPassword(auth, email, password)
+        const credential = await createUserWithEmailAndPassword(auth, email, password)
+        await sendEmailVerification(credential.user)
       } else {
         await signInWithEmailAndPassword(auth, email, password)
       }
       setPassword('')
     } catch (reason) {
       setError(errorMessage(reason))
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  async function handleResendVerification() {
+    if (!user) return
+    setBusy(true)
+    setError('')
+    setAuthMessage('')
+    try {
+      await sendEmailVerification(user)
+      setAuthMessage(`Enviamos un nuevo enlace de verificación a ${user.email}.`)
+    } catch (reason) {
+      setError(`No se pudo enviar el enlace: ${errorMessage(reason)}`)
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  async function handleCheckVerification() {
+    if (!user) return
+    setBusy(true)
+    setError('')
+    setAuthMessage('')
+    try {
+      await reload(user)
+      const refreshedUser = auth.currentUser
+      if (refreshedUser?.emailVerified) {
+        await refreshedUser.getIdToken(true)
+        setUser(refreshedUser)
+        setAuthMessage('Correo verificado. Ya puedes usar tus tareas.')
+      } else {
+        setError('Aún no aparece verificado. Abre el enlace del correo y vuelve a intentarlo.')
+      }
+    } catch (reason) {
+      setError(`No se pudo comprobar la verificación: ${errorMessage(reason)}`)
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  async function handlePasswordReset() {
+    setError('')
+    setAuthMessage('')
+    if (!email.trim()) {
+      setError('Escribe tu correo electrónico para enviarte el enlace de recuperación.')
+      return
+    }
+
+    setBusy(true)
+    try {
+      await sendPasswordResetEmail(auth, email.trim())
+      setAuthMessage('Si existe una cuenta con ese correo, recibirás un enlace para cambiar la contraseña.')
+    } catch (reason) {
+      setError(`No se pudo enviar el enlace: ${errorMessage(reason)}`)
     } finally {
       setBusy(false)
     }
@@ -157,6 +219,37 @@ function App() {
               {busy ? 'Un momento…' : authMode === 'login' ? 'Iniciar sesión' : 'Crear cuenta'}
             </button>
           </form>
+          {authMode === 'login' && (
+            <button className="auth-link" type="button" onClick={handlePasswordReset} disabled={busy}>
+              ¿Olvidaste tu contraseña?
+            </button>
+          )}
+          {authMessage && <p className="notice success" role="status">{authMessage}</p>}
+          {error && <p className="notice error" role="alert">{error}</p>}
+        </section>
+      </main>
+    )
+  }
+
+  if (!user.emailVerified) {
+    return (
+      <main className="auth-page">
+        <section className="auth-card">
+          <p className="eyebrow">VERIFICA TU CORREO</p>
+          <h1>Confirma tu cuenta</h1>
+          <p className="intro">Enviamos un enlace a <strong>{user.email}</strong>. Ábrelo y después vuelve aquí para confirmar la verificación.</p>
+          <div className="verification-actions">
+            <button className="button button-primary full-width" type="button" onClick={handleCheckVerification} disabled={busy}>
+              {busy ? 'Comprobando…' : 'Ya verifiqué mi correo'}
+            </button>
+            <button className="button button-quiet full-width" type="button" onClick={handleResendVerification} disabled={busy}>
+              Reenviar enlace
+            </button>
+            <button className="auth-link" type="button" onClick={handleSignOut} disabled={busy}>
+              Cerrar sesión
+            </button>
+          </div>
+          {authMessage && <p className="notice success" role="status">{authMessage}</p>}
           {error && <p className="notice error" role="alert">{error}</p>}
         </section>
       </main>
