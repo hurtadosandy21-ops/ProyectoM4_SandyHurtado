@@ -13,6 +13,7 @@ import { auth } from './services/firebase'
 import { createTask, removeTask, subscribeToTasks, updateTask } from './services/tasks'
 import { TaskList } from './components/TaskList'
 import { TaskSummary } from './components/TaskSummary'
+import { AppFooter } from './components/AppFooter'
 import type { Task, TaskFilter } from './types/task'
 
 type AuthMode = 'login' | 'register'
@@ -31,6 +32,7 @@ function App() {
   const [description, setDescription] = useState('')
   const [taskData, setTaskData] = useState<{ userId: string; tasks: Task[] } | null>(null)
   const [filter, setFilter] = useState<TaskFilter>('all')
+  const [showTasks, setShowTasks] = useState(false)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const [authMessage, setAuthMessage] = useState('')
@@ -191,13 +193,19 @@ function App() {
   }
 
   if (!authReady) {
-    return <main className="page-shell"><p className="loading">Comprobando tu sesión…</p></main>
+    return (
+      <div className="app-layout">
+        <main className="auth-page"><p className="loading">Comprobando tu sesión…</p></main>
+        <AppFooter />
+      </div>
+    )
   }
 
   if (!user) {
     return (
-      <main className="auth-page">
-        <section className="auth-card">
+      <div className="app-layout">
+        <main className="auth-page">
+          <section className="auth-card">
           <p className="eyebrow">ORGANIZA TU DÍA</p>
           <h1>Mis tareas</h1>
           <p className="intro">Entra para consultar y organizar tus tareas.</p>
@@ -223,15 +231,18 @@ function App() {
           )}
           {authMessage && <p className="notice success" role="status">{authMessage}</p>}
           {error && <p className="notice error" role="alert">{error}</p>}
-        </section>
-      </main>
+          </section>
+        </main>
+        <AppFooter />
+      </div>
     )
   }
 
   if (!user.emailVerified) {
     return (
-      <main className="auth-page">
-        <section className="auth-card">
+      <div className="app-layout">
+        <main className="auth-page">
+          <section className="auth-card">
           <p className="eyebrow">VERIFICA TU CORREO</p>
           <h1>Confirma tu cuenta</h1>
           <p className="intro">Enviamos un enlace a <strong>{user.email}</strong>. Ábrelo y después vuelve aquí para confirmar la verificación.</p>
@@ -248,15 +259,24 @@ function App() {
           </div>
           {authMessage && <p className="notice success" role="status">{authMessage}</p>}
           {error && <p className="notice error" role="alert">{error}</p>}
-        </section>
-      </main>
+          </section>
+        </main>
+        <AppFooter />
+      </div>
     )
   }
 
   const completedCount = tasks.filter((task) => task.completed).length
+  const visibleTaskCount =
+    filter === 'pending'
+      ? tasks.length - completedCount
+      : filter === 'completed'
+        ? completedCount
+        : tasks.length
 
   return (
-    <main className="page-shell">
+    <div className="app-layout">
+      <main className="page-shell">
       <header className="topbar">
         <a className="brand" href="/">Mis tareas<span>.</span></a>
         <div className="account-area">
@@ -289,20 +309,46 @@ function App() {
         <section className="tasks-section" aria-labelledby="tasks-title">
           <div className="tasks-heading">
             <div><p className="eyebrow">LISTA</p><h2 id="tasks-title">Tus tareas</h2></div>
-            <label className="filter-control">Mostrar
-              <select value={filter} onChange={(event) => setFilter(event.target.value as TaskFilter)}>
-                <option value="all">Todas</option>
-                <option value="pending">Pendientes</option>
-                <option value="completed">Completadas</option>
-              </select>
-            </label>
+            <div className="tasks-controls">
+              <label className="filter-control">Mostrar
+                <select
+                  value={filter}
+                  onChange={(event) => {
+                    setFilter(event.target.value as TaskFilter)
+                    setShowTasks(true)
+                  }}
+                >
+                  <option value="all">Todas</option>
+                  <option value="pending">Pendientes</option>
+                  <option value="completed">Completadas</option>
+                </select>
+              </label>
+              <button
+                className="button button-quiet task-collapse-button"
+                type="button"
+                aria-expanded={showTasks}
+                aria-controls="task-list-panel"
+                onClick={() => setShowTasks((visible) => !visible)}
+              >
+                {showTasks ? 'Ocultar lista' : `Ver lista (${visibleTaskCount})`}
+                <svg className={showTasks ? 'task-chevron is-open' : 'task-chevron'} viewBox="0 0 16 16" aria-hidden="true">
+                  <path d="m3.5 6 4.5 4 4.5-4" />
+                </svg>
+              </button>
+            </div>
           </div>
-          {taskData?.userId !== user.uid ? <p className="loading">Cargando tus tareas…</p> : (
-            <TaskList tasks={tasks} filter={filter} onToggle={handleToggle} onDelete={handleDelete} onUpdate={handleUpdate} />
-          )}
+          <div id="task-list-panel" className="task-list-panel" hidden={!showTasks}>
+            {showTasks && (
+              taskData?.userId !== user.uid ? <p className="loading">Cargando tus tareas…</p> : (
+                <TaskList tasks={tasks} filter={filter} onToggle={handleToggle} onDelete={handleDelete} onUpdate={handleUpdate} />
+              )
+            )}
+          </div>
         </section>
       </section>
-    </main>
+      </main>
+      <AppFooter />
+    </div>
   )
 }
 
