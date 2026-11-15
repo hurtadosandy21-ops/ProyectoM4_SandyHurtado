@@ -7,7 +7,7 @@ Aplicación web para organizar tareas personales. Cada persona crea una cuenta, 
 | Recurso | Enlace |
 | --- | --- |
 | Aplicación desplegada | [proyecto-m4-sandy-hurtado.vercel.app](https://proyecto-m4-sandy-hurtado.vercel.app) |
-| Registro del uso de IA | [IA.md](IA.md) |
+| Registro del uso de IA | [IA.md](./proyrcto-m4-sandy-hurtado/IA.md) |
 | Endpoint del resumen | POST /api/send-summary |
 
 ## Índice
@@ -209,6 +209,6 @@ npm run build
 
 Se utilizaron **ChatGPT** y **Gemini** como apoyo para aprender, planificar funciones, investigar errores y mejorar la documentación. Las respuestas se revisaron y adaptaron manualmente durante el desarrollo.
 
-En [IA.md](IA.md) se presenta un registro técnico ampliado con prompts reconstruidos, fragmentos de código, causas de errores, soluciones y aprendizajes. Los ejemplos se identifican como reconstrucciones y no como transcripciones literales.
+En [IA.md](./proyrcto-m4-sandy-hurtado/IA.md) se presenta un registro técnico ampliado con prompts reconstruidos, fragmentos de código, causas de errores, soluciones y aprendizajes. Los ejemplos se identifican como reconstrucciones y no como transcripciones literales.
 
 [↑ Volver al índice](#índice)
