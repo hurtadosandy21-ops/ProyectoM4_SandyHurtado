@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="660" viewBox="0 0 1100 660" role="img" aria-labelledby="title desc">
+  <title id="title">Flujo de la aplicación Mis tareas</title>
+  <desc id="desc">La persona usa la interfaz React, que se conecta con Firebase para autenticación y tareas. Las rutas API de Vercel consultan Firebase Admin y envían correos por Amazon SES; Vercel Cron activa los recordatorios.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#eff8ef"/><stop offset="1" stop-color="#fff8e9"/></linearGradient>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0 0 10 5 0 10z" fill="#347b5d"/></marker>
+    <style>
+      .title{font:700 30px Arial,sans-serif;fill:#20382d}.sub{font:15px Arial,sans-serif;fill:#65766c}.box{fill:#fff;stroke:#cfe2d2;stroke-width:2}.head{font:700 19px Arial,sans-serif;fill:#20382d}.body{font:15px Arial,sans-serif;fill:#5f7167}.tag{font:700 12px Arial,sans-serif;letter-spacing:1.4px;fill:#267453}.arrow{stroke:#347b5d;stroke-width:3;fill:none;marker-end:url(#arrow)}.dashed{stroke-dasharray:8 7}
+    </style>
+  </defs>
+  <rect width="1100" height="660" rx="28" fill="url(#bg)"/>
+  <text x="50" y="58" class="tag">ARQUITECTURA</text>
+  <text x="50" y="98" class="title">Cómo funciona Mis tareas</text>
+  <text x="50" y="126" class="sub">Autenticación, datos y correos fluyen por servicios separados.</text>
+
+  <rect x="55" y="205" width="220" height="150" rx="20" class="box"/>
+  <text x="80" y="241" class="tag">PERSONA</text>
+  <text x="80" y="277" class="head">Navegador</text>
+  <text x="80" y="307" class="body">Cuenta, tareas, filtros</text>
+  <text x="80" y="330" class="body">y vistas previas</text>
+
+  <rect x="355" y="170" width="300" height="220" rx="20" class="box"/>
+  <text x="382" y="207" class="tag">FRONTEND</text>
+  <text x="382" y="245" class="head">React + TypeScript</text>
+  <text x="382" y="278" class="body">Interfaz y navegación lateral</text>
+  <text x="382" y="303" class="body">Firebase Auth: sesión y Google</text>
+  <text x="382" y="328" class="body">Firestore: tareas del propietario</text>
+  <text x="382" y="361" class="body">El ID token autentica solicitudes API</text>
+
+  <rect x="755" y="170" width="290" height="220" rx="20" class="box"/>
+  <text x="782" y="207" class="tag">SERVIDOR</text>
+  <text x="782" y="245" class="head">API Routes de Vercel</text>
+  <text x="782" y="278" class="body">Verifica token o CRON_SECRET</text>
+  <text x="782" y="303" class="body">Firebase Admin consulta tareas</text>
+  <text x="782" y="328" class="body">Agrupa y prepara el mensaje</text>
+  <text x="782" y="361" class="body">No expone claves al navegador</text>
+
+  <rect x="755" y="470" width="290" height="125" rx="20" class="box"/>
+  <text x="782" y="507" class="tag">EMAIL</text>
+  <text x="782" y="544" class="head">Amazon SES</text>
+  <text x="782" y="570" class="body">Entrega resumen y recordatorios</text>
+
+  <rect x="355" y="470" width="300" height="125" rx="20" class="box"/>
+  <text x="382" y="507" class="tag">AUTOMATIZACIÓN</text>
+  <text x="382" y="544" class="head">Vercel Cron</text>
+  <text x="382" y="570" class="body">Llama la ruta una vez al día</text>
+
+  <path d="M275 280h72" class="arrow"/>
+  <path d="M655 280h92" class="arrow"/>
+  <path d="M900 390v72" class="arrow"/>
+  <path d="M655 532h90" class="arrow dashed"/>
+  <text x="675" y="517" class="sub">invocación segura</text>
+  <path d="M505 470v-72" class="arrow dashed"/>
+  <text x="520" y="434" class="sub">tareas</text>
+  <text x="55" y="630" class="sub">El sandbox de envío es una condición de la cuenta SES; no es un módulo de la aplicación.</text>
+</svg>
