@@ -6,12 +6,13 @@ import {
   onSnapshot,
   query,
   serverTimestamp,
+  Timestamp,
   updateDoc,
   where,
   type Unsubscribe,
 } from 'firebase/firestore'
 import { db } from './firebase'
-import type { Task } from '../types/task'
+import type { Task, TaskPriority } from '../types/task'
 
 const tasksCollection = collection(db, 'tasks')
 
@@ -53,6 +54,13 @@ export function subscribeToTasks(
             description: (data.description as string | undefined) ?? '',
             completed: Boolean(data.completed),
             createdAt: data.createdAt ?? null,
+            dueAt: data.dueAt ?? null,
+            hasDueTime: data.hasDueTime !== false,
+            reminderAt: data.reminderAt ?? null,
+            reminderEnabled: data.reminderEnabled === true,
+            reminderSentAt: data.reminderSentAt ?? null,
+            timeZone: typeof data.timeZone === 'string' ? data.timeZone : 'UTC',
+            priority: data.priority === 'urgent' || data.priority === 'passable' ? data.priority : 'normal',
           }
         })
         tasks.sort(
@@ -71,27 +79,68 @@ export function subscribeToTasks(
   )
 }
 
-export function createTask(userId: string, title: string, description: string) {
+export function createTask(
+  userId: string,
+  title: string,
+  description: string,
+  dueAt: Date | null = null,
+  reminderEnabled = false,
+  timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone,
+  hasDueTime = Boolean(dueAt),
+  priority: TaskPriority = 'normal',
+) {
+  const shouldRemind = Boolean(dueAt && hasDueTime && reminderEnabled)
   return addDoc(tasksCollection, {
     userId,
     title: title.trim(),
     description: description.trim(),
     completed: false,
     createdAt: serverTimestamp(),
+    dueAt: dueAt ? Timestamp.fromDate(dueAt) : null,
+    hasDueTime,
+    reminderEnabled: shouldRemind,
+    reminderAt: shouldRemind && dueAt
+      ? Timestamp.fromDate(new Date(dueAt.getTime() - 48 * 60 * 60 * 1000))
+      : null,
+    reminderSentAt: null,
+    timeZone,
+    priority,
   })
+}
+
+type TaskChanges = Partial<Pick<Task, 'title' | 'description' | 'completed' | 'reminderEnabled' | 'timeZone' | 'hasDueTime' | 'priority'>> & {
+  dueAt?: Date | null
 }
 
 export function updateTask(
   taskId: string,
-  changes: Partial<Pick<Task, 'title' | 'description' | 'completed'>>,
+  changes: TaskChanges,
 ) {
-  return updateDoc(doc(db, 'tasks', taskId), {
+  const payload: Record<string, unknown> = {
     ...changes,
     ...(changes.title !== undefined ? { title: changes.title.trim() } : {}),
     ...(changes.description !== undefined
       ? { description: changes.description.trim() }
       : {}),
     updatedAt: serverTimestamp(),
+  }
+
+  if (changes.dueAt !== undefined) {
+    const hasDueTime = changes.hasDueTime ?? true
+    const shouldRemind = Boolean(changes.dueAt && hasDueTime && changes.reminderEnabled)
+    payload.dueAt = changes.dueAt ? Timestamp.fromDate(changes.dueAt) : null
+    payload.reminderEnabled = shouldRemind
+    payload.reminderAt = shouldRemind && changes.dueAt
+      ? Timestamp.fromDate(new Date(changes.dueAt.getTime() - 48 * 60 * 60 * 1000))
+      : null
+    payload.reminderSentAt = null
+    payload.timeZone = changes.timeZone ?? 'UTC'
+  }
+
+  if (changes.completed === false) payload.reminderSentAt = null
+
+  return updateDoc(doc(db, 'tasks', taskId), {
+    ...payload,
   })
 }
 

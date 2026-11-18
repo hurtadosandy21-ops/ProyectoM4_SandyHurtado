@@ -10,23 +10,40 @@ service cloud.firestore {
 
       allow create: if signedIn()
         && request.resource.data.userId == request.auth.uid
-        && request.resource.data.keys().hasAll(['userId', 'title', 'description', 'completed', 'createdAt'])
-        && request.resource.data.keys().hasOnly(['userId', 'title', 'description', 'completed', 'createdAt'])
+        && request.resource.data.keys().hasAll(['userId', 'title', 'description', 'completed', 'createdAt', 'dueAt', 'hasDueTime', 'priority', 'reminderEnabled', 'reminderAt', 'reminderSentAt', 'timeZone'])
+        && request.resource.data.keys().hasOnly(['userId', 'title', 'description', 'completed', 'createdAt', 'dueAt', 'hasDueTime', 'priority', 'reminderEnabled', 'reminderAt', 'reminderSentAt', 'timeZone'])
         && request.resource.data.title is string
         && request.resource.data.title.size() > 0
         && request.resource.data.title.size() <= 120
         && request.resource.data.description is string
-        && request.resource.data.completed is bool;
+        && request.resource.data.completed is bool
+        && request.resource.data.createdAt is timestamp
+        && (request.resource.data.dueAt == null || request.resource.data.dueAt is timestamp)
+        && request.resource.data.hasDueTime is bool
+        && request.resource.data.priority in ['urgent', 'passable', 'normal']
+        && request.resource.data.reminderEnabled is bool
+        && (request.resource.data.reminderAt == null || request.resource.data.reminderAt is timestamp)
+        && request.resource.data.reminderSentAt == null
+        && request.resource.data.timeZone is string
+        && (!request.resource.data.reminderEnabled || (request.resource.data.dueAt != null && request.resource.data.hasDueTime && request.resource.data.reminderAt != null));
 
       allow update: if signedIn()
         && resource.data.userId == request.auth.uid
         && request.resource.data.userId == request.auth.uid
-        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['title', 'description', 'completed', 'updatedAt'])
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['title', 'description', 'completed', 'updatedAt', 'dueAt', 'hasDueTime', 'priority', 'reminderEnabled', 'reminderAt', 'reminderSentAt', 'timeZone'])
         && request.resource.data.title is string
         && request.resource.data.title.size() > 0
         && request.resource.data.title.size() <= 120
         && request.resource.data.description is string
-        && request.resource.data.completed is bool;
+        && request.resource.data.completed is bool
+        && (!('dueAt' in request.resource.data) || request.resource.data.dueAt == null || request.resource.data.dueAt is timestamp)
+        && (!('hasDueTime' in request.resource.data) || request.resource.data.hasDueTime is bool)
+        && (!('priority' in request.resource.data) || request.resource.data.priority in ['urgent', 'passable', 'normal'])
+        && (!('reminderEnabled' in request.resource.data) || request.resource.data.reminderEnabled is bool)
+        && (!('reminderAt' in request.resource.data) || request.resource.data.reminderAt == null || request.resource.data.reminderAt is timestamp)
+        && (!('reminderSentAt' in request.resource.data) || request.resource.data.reminderSentAt == null || request.resource.data.reminderSentAt is timestamp)
+        && (!('timeZone' in request.resource.data) || request.resource.data.timeZone is string)
+        && (!request.resource.data.get('reminderEnabled', false) || (request.resource.data.get('dueAt', null) != null && request.resource.data.get('hasDueTime', true) && request.resource.data.get('reminderAt', null) != null));
 
       allow delete: if signedIn() && resource.data.userId == request.auth.uid;
     }
